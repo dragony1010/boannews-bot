@@ -69,6 +69,7 @@ def clean(text, limit=300):
 def fetch_entries():
     r = requests.get(FEED_URL, headers=HEADERS, timeout=15)
     r.raise_for_status()
+    print("피드 응답:", r.status_code, r.headers.get("Content-Type"), "주소:", r.url)
     return feedparser.parse(r.content).entries
 
 
@@ -131,6 +132,7 @@ def check_once():
     entries = fetch_entries()
     new = [e for e in entries if e.get("link") and e.get("link") not in seen]
     to_post = new[:FIRST_RUN_POST] if not seen else new
+    print(f"피드 기사 {len(entries)}개 / 기존 기록 {len(seen)}개 / 새 기사 {len(new)}개")
 
     for e in reversed(to_post):
         summary = None
