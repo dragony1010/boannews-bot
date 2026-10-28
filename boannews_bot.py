@@ -27,6 +27,13 @@ FIRST_RUN_POST = int(os.getenv("FIRST_RUN_POST", "3"))
 MODEL = os.getenv("CLAUDE_MODEL", "claude-haiku-5-5")  # 요약용으로는 빠르고 저렴한 모델이면 충분
 HEADERS = {"User-Agent": "Mozilla/5.0 (BoanNews-Discord-Bot)"}
 
+# 포럼 채널용 설정
+# FORUM=1      -> 기사마다 새 포럼 게시물 생성 (기사 제목이 게시물 제목)
+# THREAD_ID=.. -> 이미 만든 게시물(스레드) 하나에 계속 올리기
+# 둘 다 없으면 일반 텍스트 채널로 전송
+FORUM = os.getenv("FORUM") == "1"
+THREAD_ID = os.getenv("THREAD_ID", "").strip()
+
 USE_AI = bool(os.getenv("ANTHROPIC_API_KEY"))
 if USE_AI:  # API 키가 있을 때만 요약 관련 라이브러리를 불러옴
     import trafilatura
@@ -103,8 +110,14 @@ def post_to_discord(entry, summary):
         "color": 0xC62828,
         "footer": {"text": f"보안뉴스 · {entry.get('published', '')}" + (" · AI 요약" if summary else "")},
     }
+    payload = {"embeds": [embed]}
+    params = {}
+    if THREAD_ID:
+        params["thread_id"] = THREAD_ID
+    elif FORUM:
+        payload["thread_name"] = clean(entry.get("title"), 95)  # 게시물 제목은 최대 100자
     while True:
-        resp = requests.post(WEBHOOK_URL, json={"embeds": [embed]}, timeout=15)
+        resp = requests.post(WEBHOOK_URL, params=params, json=payload, timeout=15)
         if resp.status_code == 429:
             time.sleep(float(resp.json().get("retry_after", 2)))
             continue
