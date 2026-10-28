@@ -28,6 +28,7 @@ jobs:
         env:
           RUN_ONCE: "1"
           FORUM: "1"   # 포럼 채널이면 "1", 일반 채널이면 이 줄을 지우세요
+          FEED_URL: "https://www.boannews.com/rss/allArticle.xml"
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python boannews_bot.py
 
